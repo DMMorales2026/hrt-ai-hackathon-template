@@ -31,3 +31,4 @@ A starting point for any potential patient or young professional looking for inp
 2. To assist young professionals with basic understanding of each discipline working in inpatient settings
 3. To provide a basic overview of the size and scope each program has to offer.
 
+Link to [Mental Health Directory](https://glowing-space-computing-machine-wv74r5qqvrvph9qwx-8501.app.github.dev/)
