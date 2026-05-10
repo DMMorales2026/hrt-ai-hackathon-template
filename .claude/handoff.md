@@ -1,46 +1,39 @@
 # Handoff — 2026-05-10
 
 ## Summary
-- Added **🏢 Outpatient Programs** tab using `data/hospital locations 11.csv` (49 programs)
-  - Filters: search by keyword, county multiselect, population served multiselect
-  - 4 summary metrics: programs found, counties, programs serving youth, programs with SUD services
-  - Blue-bordered cards (distinct from inpatient orange) with address, phone, insurance, services, and website
-  - Bar chart of programs by county
-- Created `data_ai/outpatient_coords.csv` with lat/lon for all 49 outpatient programs (city-level precision)
-- Added **🗺️ Outpatient Map** tab with interactive pydeck map
-  - Blue circles (distinct from inpatient orange circles)
-  - County filter, hover tooltips (program name, city, county, type, services, phone)
-  - Reference table below the map
-- Removed 🏥 icon from the wellness banner header
-- Saved one checkpoint this session
+- Added **🏠 Home** tab as the first tab with welcome message, 5 quick stats, color-coded "What's Inside" feature cards, and a quick-reference "How to Get Started" table
+- Added **📊 Outpatient Charts** tab then removed it at user request
+- Removed multiple emoji icons from section headers across tabs (Home, Outpatient Programs, Outpatient Map, Disciplines)
+- Renamed tabs:
+  - "Hospital Cards" → **Inpatient Hospital Cards**
+  - "Full Table" → **Inpatient Full List**
+  - "Map" → **Inpatient Map**
+  - "Charts" → **Inpatient Charts**
+- Updated banner title to **"California's Mental Health Programs Directory"**
+- Removed "Hospitals by Accreditation" chart from Inpatient Charts tab; cleaned up layout from 2-column to single column
+- Removed "Disciplines by Setting Type" chart from Disciplines tab
+- Removed 🛏️ icon from "Bed Capacity by County" chart heading
 
 ## Current State
-- **Branch:** main (3 commits ahead of origin, uncommitted changes remain)
+- **Branch:** main (4 commits ahead of origin, app.py has uncommitted changes)
 - **Server:** running on port 8501
-- **Modified/untracked files not yet committed:**
-  - `app.py` (outpatient tab + outpatient map tab added, banner icon removed)
-  - `data/hospital locations 11.csv` (untracked — new source file)
-  - `data_ai/outpatient_coords.csv` (untracked — new coords file)
-- **App tabs (in order):** Hospital Cards · Full Table · Map · Charts · Outpatient Programs · Outpatient Map · Disciplines
+- **Tab order (8 tabs):** Home · Inpatient Hospital Cards · Inpatient Full List · Inpatient Map · Inpatient Charts · Outpatient Programs · Outpatient Map · Disciplines
 - **App URL:** https://glowing-space-computing-machine-wv74r5qqvrvph9qwx-8501.app.github.dev
 
 ## Next Steps
-- Run `/checkpoint` to commit and tag the outpatient map work
-- Could combine both maps (inpatient + outpatient) into a single unified map tab with color-coded layers
-- Could add insurance filter to the outpatient tab (mirrors inpatient sidebar)
-- Could add a "Services" tag breakdown chart to the outpatient tab
-- Could add outpatient program detail panel (like the inpatient Full Table tab)
+- Run `/checkpoint` to commit current uncommitted changes to app.py
+- Could update the Home tab "What's Inside" cards to reflect the renamed tabs
+- Could update page config title (`st.set_page_config`) to match new banner title
+- Could add an outpatient charts tab back if needed in the future
+- Could add filter for insurance on the Outpatient Programs tab
 
 ## Key Decisions
-- Outpatient map uses **blue circles** (`[37, 99, 235]`) vs inpatient **orange circles** (`[192, 82, 42]`) for visual distinction
-- Outpatient map dots use a **fixed radius of 8000m** (no bed-count scaling, since outpatient has no bed data)
-- Outpatient coords stored in `data_ai/outpatient_coords.csv` and merged at load time in `load_outpatient()`
-- Kept outpatient programs and outpatient map as two separate tabs rather than combining — gives user cleaner navigation between list and map views
+- All tab renames are in the single `st.tabs([...])` call — both the list entry and the `with tab_X:` block must stay in sync
+- Emoji icons removed from section headers throughout for a cleaner, more professional look
+- Home tab loads all three datasets (`load_data`, `load_outpatient`, `load_disciplines`) to compute live stats — no additional caching needed
 
 ## Watchouts
-- **`data/hospital locations 11.csv` is untracked** — will be lost if the Codespace is reset without committing. Run `/checkpoint` soon.
-- **`data_ai/outpatient_coords.csv` is untracked** — same risk as above.
-- **Cache behavior:** `@st.cache_data` on `load_outpatient()` caches on server start. Any CSV edits require a server restart to take effect.
-- **Map tiles:** Both maps use CartoDB Positron (`https://basemaps.cartocdn.com/gl/positron-gl-style/style.json`). Do not switch to `mapbox://` URLs without a token.
-- **Tab order is hardcoded** in the `st.tabs()` call — adding/removing tabs requires updating both the tab list and the `with tab_X:` blocks in sync.
+- **app.py has uncommitted changes** — run `/checkpoint` before ending the session or the work will be lost on Codespace reset
+- **Tab variable names** are positional — if tabs are reordered or added/removed, every `with tab_X:` block below must be updated to match the new order
+- **Home tab stats** pull from the full unfiltered datasets, not the sidebar-filtered data — this is intentional so counts always reflect the full directory
 - **Server restart command:** `streamlit run app.py --server.address 0.0.0.0 --server.port 8501 --server.headless true --server.enableCORS false --server.enableXsrfProtection false &`

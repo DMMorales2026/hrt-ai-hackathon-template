@@ -177,7 +177,7 @@ st.markdown(f"""
               align-items:center; text-align:center; padding:16px;">
     <h1 style="color:white; font-size:2rem; font-weight:800; margin:0;
                text-shadow: 0 2px 10px rgba(0,0,0,0.7);">
-      California Inpatient Mental Health Hospitals
+      California's Mental Health Programs Directory
     </h1>
     <p style="color:#fde68a; font-size:1rem; margin:8px 0 0 0;
               text-shadow: 0 1px 6px rgba(0,0,0,0.6);">
@@ -271,7 +271,92 @@ if total_h == 0:
     st.stop()
 
 # ── Tabs ───────────────────────────────────────────────────────────────────────
-tab_cards, tab_table, tab_map, tab_charts, tab_out, tab_op_map, tab_disc = st.tabs(["🗂 Hospital Cards", "📋 Full Table", "🗺️ Map", "📊 Charts", "🏢 Outpatient Programs", "🗺️ Outpatient Map", "👩‍⚕️ Disciplines"])
+tab_home, tab_cards, tab_table, tab_map, tab_charts, tab_out, tab_op_map, tab_disc = st.tabs(["🏠 Home", "🗂 Inpatient Hospital Cards", "📋 Inpatient Full List", "🗺️ Inpatient Map", "📊 Inpatient Charts", "🏢 Outpatient Programs", "🗺️ Outpatient Map", "👩‍⚕️ Disciplines"])
+
+# ── HOME TAB ───────────────────────────────────────────────────────────────────
+with tab_home:
+    st.markdown("""
+    <div style="text-align:center; padding: 10px 0 30px 0;">
+        <h2 style="color:#1e3a6e; font-size:1.8rem; margin-bottom:8px;">
+            Welcome to the California Mental Health Programs Directory
+        </h2>
+        <p style="color:#475569; font-size:1.05rem; max-width:700px; margin:0 auto;">
+            A comprehensive resource for locating inpatient and outpatient mental health
+            programs across California — built for clinicians, case managers, students,
+            and anyone navigating the behavioral health system.
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
+
+    # Quick stats row
+    op_all = load_outpatient()
+    inp_all = load_data()
+    disc_all = load_disciplines()
+
+    s1, s2, s3, s4, s5 = st.columns(5)
+    s1.metric("🏥 Inpatient Hospitals", len(inp_all))
+    s2.metric("🏢 Outpatient Programs", len(op_all))
+    s3.metric("🛏️ Total Inpatient Beds", int(inp_all["Bed Count"].sum()))
+    s4.metric("📍 Counties Covered",    max(inp_all["County"].nunique(), op_all["County"].nunique()))
+    s5.metric("👩‍⚕️ Disciplines Listed",  len(disc_all))
+
+    st.markdown("---")
+
+    # What's in the app
+    st.markdown("### What's Inside")
+    g1, g2 = st.columns(2)
+
+    with g1:
+        st.markdown("""
+        <div style="background:#fff; border-radius:12px; padding:20px 24px; margin-bottom:16px; box-shadow:0 2px 8px rgba(0,0,0,0.08); border-left:5px solid #c0522a;">
+            <h4 style="margin:0 0 6px 0; color:#c0522a;">🗂 Inpatient Hospital Cards</h4>
+            <p style="margin:0; color:#444; font-size:14px;">Browse all 49 inpatient psychiatric hospitals with detailed cards showing beds, accreditation, insurance, and contact info. Filter by county, population, and insurance.</p>
+        </div>
+        <div style="background:#fff; border-radius:12px; padding:20px 24px; margin-bottom:16px; box-shadow:0 2px 8px rgba(0,0,0,0.08); border-left:5px solid #94a3b8;">
+            <h4 style="margin:0 0 6px 0; color:#334155;">📋 Full Table</h4>
+            <p style="margin:0; color:#444; font-size:14px;">View all inpatient hospitals in a sortable table. Click any hospital to see its full profile including address, bed count, program type, and more.</p>
+        </div>
+        <div style="background:#fff; border-radius:12px; padding:20px 24px; margin-bottom:16px; box-shadow:0 2px 8px rgba(0,0,0,0.08); border-left:5px solid #0d9488;">
+            <h4 style="margin:0 0 6px 0; color:#0d6b61;">🗺️ Inpatient Map</h4>
+            <p style="margin:0; color:#444; font-size:14px;">Interactive map of all inpatient hospital locations. Circle size reflects bed capacity. Hover over any circle for a quick summary.</p>
+        </div>
+        <div style="background:#fff; border-radius:12px; padding:20px 24px; margin-bottom:16px; box-shadow:0 2px 8px rgba(0,0,0,0.08); border-left:5px solid #7c3aed;">
+            <h4 style="margin:0 0 6px 0; color:#5b21b6;">📊 Charts</h4>
+            <p style="margin:0; color:#444; font-size:14px;">Visual breakdowns of hospitals by county, accreditation type, program type, and bed capacity — filtered in real time by your sidebar selections.</p>
+        </div>
+        """, unsafe_allow_html=True)
+
+    with g2:
+        st.markdown("""
+        <div style="background:#fff; border-radius:12px; padding:20px 24px; margin-bottom:16px; box-shadow:0 2px 8px rgba(0,0,0,0.08); border-left:5px solid #2563eb;">
+            <h4 style="margin:0 0 6px 0; color:#1d4ed8;">🏢 Outpatient Programs</h4>
+            <p style="margin:0; color:#444; font-size:14px;">Browse 49 community-based outpatient psychiatric programs. Filter by county and population served. Cards show services offered, insurance accepted, and direct links.</p>
+        </div>
+        <div style="background:#fff; border-radius:12px; padding:20px 24px; margin-bottom:16px; box-shadow:0 2px 8px rgba(0,0,0,0.08); border-left:5px solid #0ea5e9;">
+            <h4 style="margin:0 0 6px 0; color:#0369a1;">🗺️ Outpatient Map</h4>
+            <p style="margin:0; color:#444; font-size:14px;">Interactive map of all outpatient program locations across California. Hover to see program details. Filter by county to zoom in on a region.</p>
+        </div>
+        <div style="background:#fff; border-radius:12px; padding:20px 24px; margin-bottom:16px; box-shadow:0 2px 8px rgba(0,0,0,0.08); border-left:5px solid #059669;">
+            <h4 style="margin:0 0 6px 0; color:#065f46;">👩‍⚕️ Disciplines</h4>
+            <p style="margin:0; color:#444; font-size:14px;">Explore 20 mental health disciplines working in inpatient and outpatient settings — including credentials, education, key responsibilities, and California licensure bodies.</p>
+        </div>
+        """, unsafe_allow_html=True)
+
+    st.markdown("---")
+    st.markdown("### How to Get Started")
+    st.info("👈 Use the **sidebar filters** to narrow by county, insurance, or population served — then explore any tab above. Filters apply to inpatient data across all inpatient tabs.")
+    st.markdown("""
+    | I want to… | Go to… |
+    |---|---|
+    | Find a hospital near a specific county | **Sidebar → County filter → Hospital Cards** |
+    | See which hospitals accept Medi-Cal | **Sidebar → Insurance filter → Full Table** |
+    | Locate programs on a map | **🗺️ Map** or **🗺️ Outpatient Map** |
+    | Find outpatient programs for youth | **🏢 Outpatient Programs → Population: Youth** |
+    | Learn about clinical roles | **👩‍⚕️ Disciplines** |
+    """)
+
+    st.markdown("---")
+    st.caption("Data sourced from provided program listings. Always verify availability and insurance coverage directly with each facility.")
 
 # ── CARDS ──────────────────────────────────────────────────────────────────────
 with tab_cards:
@@ -395,24 +480,14 @@ with tab_map:
 
 # ── CHARTS ─────────────────────────────────────────────────────────────────────
 with tab_charts:
-    ch1, ch2 = st.columns(2)
+    st.markdown("#### Hospitals by County")
+    cnty_ct = (filtered.groupby("County")["Hospital"]
+               .count().sort_values(ascending=False)
+               .reset_index().rename(columns={"Hospital": "Count"}))
+    st.bar_chart(cnty_ct.set_index("County"), height=350)
 
-    with ch1:
-        st.markdown("#### Hospitals by County")
-        cnty_ct = (filtered.groupby("County")["Hospital"]
-                   .count().sort_values(ascending=False)
-                   .reset_index().rename(columns={"Hospital": "Count"}))
-        st.bar_chart(cnty_ct.set_index("County"), height=350)
 
-    with ch2:
-        st.markdown("#### Hospitals by Accreditation")
-        acc_series = (filtered["Accreditation"]
-                      .str.split(";").explode().str.strip()
-                      .value_counts().reset_index())
-        acc_series.columns = ["Accreditation", "Count"]
-        st.bar_chart(acc_series.set_index("Accreditation"), height=350)
-
-    st.markdown("#### 🛏️ Bed Capacity by County")
+    st.markdown("#### Bed Capacity by County")
     beds_cnty = (filtered.groupby("County")["Bed Count"]
                  .sum().sort_values(ascending=False)
                  .reset_index())
@@ -429,7 +504,7 @@ with tab_charts:
 with tab_out:
     op = load_outpatient()
 
-    st.markdown("### 🏢 California Outpatient Mental Health Programs")
+    st.markdown("### California Outpatient Mental Health Programs")
     st.markdown("Community-based psychiatric outpatient programs across California.")
 
     op_c1, op_c2, op_c3 = st.columns(3)
@@ -504,7 +579,7 @@ with tab_out:
 
 # ── OUTPATIENT MAP TAB ─────────────────────────────────────────────────────────
 with tab_op_map:
-    st.markdown("### 🗺️ Outpatient Program Locations")
+    st.markdown("### Outpatient Program Locations")
     st.markdown("All California outpatient psychiatric programs plotted across the state.")
 
     op_map_df = load_outpatient().dropna(subset=["lat", "lon"]).copy()
@@ -577,7 +652,7 @@ with tab_op_map:
 with tab_disc:
     disc_df = load_disciplines()
 
-    st.markdown("### 👩‍⚕️ Mental Health Disciplines in Inpatient Settings")
+    st.markdown("### Mental Health Disciplines in Inpatient Settings")
     st.markdown("Professionals who work across California inpatient psychiatric hospitals and behavioral health facilities.")
 
     col_search, col_setting = st.columns([2, 1])
@@ -615,11 +690,6 @@ with tab_disc:
                 for resp in row["Key Responsibilities"].split(","):
                     st.markdown(f"- {resp.strip()}")
 
-    st.markdown("---")
-    st.markdown("#### Disciplines by Setting Type")
-    setting_ct = disc_df["Setting Type"].value_counts().reset_index()
-    setting_ct.columns = ["Setting Type", "Count"]
-    st.bar_chart(setting_ct.set_index("Setting Type"), height=250)
 
 st.markdown("---")
 st.caption("Data sourced from provided listings. Verify bed availability, admissions criteria, and insurance coverage directly with each facility.")
