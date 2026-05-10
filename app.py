@@ -57,6 +57,16 @@ st.markdown("""
 
 # ── Load Data ──────────────────────────────────────────────────────────────────
 @st.cache_data
+def load_outpatient():
+    df = pd.read_csv("data/hospital locations 11.csv")
+    df.columns = df.columns.str.strip()
+    df["County"] = df["County"].str.strip()
+    df["City"]   = df["City"].str.strip()
+    coords = pd.read_csv("data_ai/outpatient_coords.csv")
+    df = df.merge(coords, on="Program Name", how="left")
+    return df
+
+@st.cache_data
 def load_disciplines():
     return pd.read_csv("data_ai/mental_health_disciplines.csv")
 
@@ -261,7 +271,7 @@ if total_h == 0:
     st.stop()
 
 # ── Tabs ───────────────────────────────────────────────────────────────────────
-tab_cards, tab_table, tab_map, tab_charts, tab_disc = st.tabs(["🗂 Hospital Cards", "📋 Full Table", "🗺️ Map", "📊 Charts", "👩‍⚕️ Disciplines"])
+tab_cards, tab_table, tab_map, tab_charts, tab_out, tab_op_map, tab_disc = st.tabs(["🗂 Hospital Cards", "📋 Full Table", "🗺️ Map", "📊 Charts", "🏢 Outpatient Programs", "🗺️ Outpatient Map", "👩‍⚕️ Disciplines"])
 
 # ── CARDS ──────────────────────────────────────────────────────────────────────
 with tab_cards:
@@ -414,6 +424,154 @@ with tab_charts:
                    .value_counts().reset_index())
     prog_series.columns = ["Program Type", "Count"]
     st.bar_chart(prog_series.set_index("Program Type"), height=320)
+
+# ── OUTPATIENT TAB ─────────────────────────────────────────────────────────────
+with tab_out:
+    op = load_outpatient()
+
+    st.markdown("### 🏢 California Outpatient Mental Health Programs")
+    st.markdown("Community-based psychiatric outpatient programs across California.")
+
+    op_c1, op_c2, op_c3 = st.columns(3)
+    with op_c1:
+        op_search = st.text_input("Search by name, city, or keyword",
+                                  placeholder="e.g. UCSF, Oakland, IOP…", key="op_search")
+    with op_c2:
+        op_counties = st.multiselect("County", options=sorted(op["County"].dropna().unique()),
+                                     default=[], placeholder="All counties", key="op_county")
+    with op_c3:
+        op_pop = st.multiselect("Population Served",
+                                options=sorted({p.strip() for ps in op["Population Served"].dropna()
+                                                for p in ps.split(";")}),
+                                default=[], placeholder="All populations", key="op_pop")
+
+    op_filtered = op.copy()
+    if op_search:
+        kw = op_search.lower()
+        op_filtered = op_filtered[
+            op_filtered["Program Name"].str.lower().str.contains(kw, na=False)
+            | op_filtered["City"].str.lower().str.contains(kw, na=False)
+            | op_filtered["Program Type"].str.lower().str.contains(kw, na=False)
+            | op_filtered["Services offered"].str.lower().str.contains(kw, na=False)
+        ]
+    if op_counties:
+        op_filtered = op_filtered[op_filtered["County"].isin(op_counties)]
+    if op_pop:
+        op_filtered = op_filtered[
+            op_filtered["Population Served"].apply(
+                lambda x: any(p in str(x) for p in op_pop)
+            )
+        ]
+
+    # Metrics
+    m1, m2, m3, m4 = st.columns(4)
+    m1.metric("Programs Found", len(op_filtered))
+    m2.metric("📍 Counties",    op_filtered["County"].nunique())
+    m3.metric("👥 Serving Youth", op_filtered["Population Served"].str.contains("Youth", na=False).sum())
+    m4.metric("💊 Includes SUD", op_filtered["Program Type"].str.contains("SUD", na=False).sum())
+
+    st.markdown("---")
+
+    if op_filtered.empty:
+        st.warning("No programs match your filters.")
+    else:
+        st.markdown(f"**{len(op_filtered)} program{'s' if len(op_filtered) != 1 else ''} found**")
+        for _, row in op_filtered.iterrows():
+            web_html = (f'<a href="{row["Website"]}" target="_blank">{row["Website"]}</a>'
+                        if pd.notna(row.get("Website")) else "—")
+            st.markdown(f"""
+            <div class="card" style="border-left-color: #2563eb;">
+                <h4>{row["Program Name"]}</h4>
+                <span class="badge badge-type">{row["Program Type"]}</span>
+                <span class="badge badge-pop">{row["Population Served"]}</span>
+                <div class="card-meta">
+                    <span>📍 <strong>{row["Address"]}</strong></span><br>
+                    <span>🗺️ <strong>{row["City"]}, {row["County"]} County</strong></span> &nbsp;&nbsp;
+                    <span>📞 <strong>{row["Phone"]}</strong></span><br>
+                    <span>💳 <strong>Insurance:</strong> {row["Insurance accepted"]}</span><br>
+                    <span>🩺 <strong>Services:</strong> {row["Services offered"]}</span><br>
+                    <span>🌐 <strong>Website:</strong> {web_html}</span>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+
+    st.markdown("---")
+    st.markdown("#### Programs by County")
+    op_cnty = (op_filtered.groupby("County")["Program Name"]
+               .count().sort_values(ascending=False).reset_index()
+               .rename(columns={"Program Name": "Count"}))
+    st.bar_chart(op_cnty.set_index("County"), height=300)
+
+# ── OUTPATIENT MAP TAB ─────────────────────────────────────────────────────────
+with tab_op_map:
+    st.markdown("### 🗺️ Outpatient Program Locations")
+    st.markdown("All California outpatient psychiatric programs plotted across the state.")
+
+    op_map_df = load_outpatient().dropna(subset=["lat", "lon"]).copy()
+
+    # County filter
+    op_map_counties = st.multiselect(
+        "Filter by County", options=sorted(op_map_df["County"].dropna().unique()),
+        default=[], placeholder="All counties", key="op_map_county"
+    )
+    if op_map_counties:
+        op_map_df = op_map_df[op_map_df["County"].isin(op_map_counties)]
+
+    st.markdown(f"**{len(op_map_df)} program{'s' if len(op_map_df) != 1 else ''} plotted**")
+
+    layer = pdk.Layer(
+        "ScatterplotLayer",
+        data=op_map_df,
+        get_position=["lon", "lat"],
+        get_radius=8000,
+        get_fill_color=[37, 99, 235, 190],
+        get_line_color=[29, 78, 216],
+        line_width_min_pixels=1,
+        pickable=True,
+    )
+
+    view = pdk.ViewState(
+        latitude=36.7783,
+        longitude=-119.4179,
+        zoom=5.2,
+        pitch=0,
+    )
+
+    tooltip = {
+        "html": """
+            <b>{Program Name}</b><br/>
+            🏙️ {City}, {County} County<br/>
+            📋 {Program Type}<br/>
+            👥 {Population Served}<br/>
+            🩺 {Services offered}<br/>
+            📞 {Phone}
+        """,
+        "style": {
+            "backgroundColor": "#1a1a1a",
+            "color": "white",
+            "fontSize": "13px",
+            "padding": "10px",
+            "borderRadius": "6px",
+            "maxWidth": "320px",
+        },
+    }
+
+    st.pydeck_chart(
+        pdk.Deck(
+            layers=[layer],
+            initial_view_state=view,
+            tooltip=tooltip,
+            map_style="https://basemaps.cartocdn.com/gl/positron-gl-style/style.json",
+        ),
+        height=540,
+    )
+
+    st.markdown("#### Programs on Map")
+    st.dataframe(
+        op_map_df[["Program Name", "City", "County", "Program Type", "Population Served", "Phone"]],
+        width="stretch",
+        hide_index=True,
+    )
 
 # ── DISCIPLINES TAB ────────────────────────────────────────────────────────────
 with tab_disc:

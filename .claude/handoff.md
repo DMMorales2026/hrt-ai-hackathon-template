@@ -1,39 +1,46 @@
 # Handoff — 2026-05-10
 
 ## Summary
-- Added a **👩‍⚕️ Disciplines** tab listing 20 mental health disciplines that work in inpatient settings
-- Created `data_ai/mental_health_disciplines.csv` with columns: Discipline, Credentials, Education Required, Role in Inpatient Setting, Key Responsibilities, Setting Type, Licensure Body (CA)
-- Disciplines tab includes search filter, setting type filter (Acute / Long-Term / Both), expandable cards with full detail, and a bar chart by setting type
-- Updated **Recreational Therapist** setting type from "Long-Term" to "Acute & Long-Term"
-- Restarted server to clear `@st.cache_data` after CSV edit so change was reflected
-- Saved two checkpoints this session
+- Added **🏢 Outpatient Programs** tab using `data/hospital locations 11.csv` (49 programs)
+  - Filters: search by keyword, county multiselect, population served multiselect
+  - 4 summary metrics: programs found, counties, programs serving youth, programs with SUD services
+  - Blue-bordered cards (distinct from inpatient orange) with address, phone, insurance, services, and website
+  - Bar chart of programs by county
+- Created `data_ai/outpatient_coords.csv` with lat/lon for all 49 outpatient programs (city-level precision)
+- Added **🗺️ Outpatient Map** tab with interactive pydeck map
+  - Blue circles (distinct from inpatient orange circles)
+  - County filter, hover tooltips (program name, city, county, type, services, phone)
+  - Reference table below the map
+- Removed 🏥 icon from the wellness banner header
+- Saved one checkpoint this session
 
 ## Current State
-- **Branch:** main (clean, all committed and tagged as `checkpoint`)
+- **Branch:** main (3 commits ahead of origin, uncommitted changes remain)
 - **Server:** running on port 8501
-- **Key files:**
-  - `app.py` — full app with 5 tabs: Hospital Cards, Full Table, Map, Disciplines, Charts
-  - `data/hospital locations 22.csv` — 49 inpatient hospitals (source data, read-only)
-  - `data_ai/mental_health_disciplines.csv` — 20 disciplines (editable)
-  - `data_ai/hospital_coords.csv` — lat/lon for all 49 hospitals
+- **Modified/untracked files not yet committed:**
+  - `app.py` (outpatient tab + outpatient map tab added, banner icon removed)
+  - `data/hospital locations 11.csv` (untracked — new source file)
+  - `data_ai/outpatient_coords.csv` (untracked — new coords file)
+- **App tabs (in order):** Hospital Cards · Full Table · Map · Charts · Outpatient Programs · Outpatient Map · Disciplines
 - **App URL:** https://glowing-space-computing-machine-wv74r5qqvrvph9qwx-8501.app.github.dev
 
 ## Next Steps
-- User may want to add more disciplines or edit existing entries
-- Could add a "discipline profile" detail page or modal
-- Could link disciplines to specific hospitals (e.g., which hospitals employ which disciplines)
-- Could add a glossary or credential explanation section
-- Could add outpatient programs as a separate tab using `data/hospital locations.csv`
+- Run `/checkpoint` to commit and tag the outpatient map work
+- Could combine both maps (inpatient + outpatient) into a single unified map tab with color-coded layers
+- Could add insurance filter to the outpatient tab (mirrors inpatient sidebar)
+- Could add a "Services" tag breakdown chart to the outpatient tab
+- Could add outpatient program detail panel (like the inpatient Full Table tab)
 
 ## Key Decisions
-- Disciplines data stored in `data_ai/mental_health_disciplines.csv` — easy to edit without touching `app.py`
-- Used `st.expander()` for each discipline card to keep the tab scannable without overwhelming the user
-- Setting Type values must be exactly: `"Acute"`, `"Long-Term"`, or `"Acute & Long-Term"` — the filter selectbox matches on these exact strings
-- After editing the CSV, a server restart (not just a browser refresh) is required to clear `@st.cache_data`
+- Outpatient map uses **blue circles** (`[37, 99, 235]`) vs inpatient **orange circles** (`[192, 82, 42]`) for visual distinction
+- Outpatient map dots use a **fixed radius of 8000m** (no bed-count scaling, since outpatient has no bed data)
+- Outpatient coords stored in `data_ai/outpatient_coords.csv` and merged at load time in `load_outpatient()`
+- Kept outpatient programs and outpatient map as two separate tabs rather than combining — gives user cleaner navigation between list and map views
 
 ## Watchouts
-- **Cache behavior:** `@st.cache_data` caches CSV reads at server startup. Editing a CSV while the server is running will NOT reflect until the server is restarted — a browser hard-refresh alone is not enough
-- **Setting Type filter:** The selectbox options are hardcoded as `["All", "Acute", "Long-Term", "Acute & Long-Term"]` — if a new setting type value is added to the CSV that doesn't match one of these exactly, it won't appear in the filter
-- **SVG header:** Encoded as base64 `<img>` tag — do not switch back to inline `<svg>` with `<defs>`, Streamlit sanitizes gradient definitions
-- **Map tiles:** Uses CartoDB Positron (free, no API key). Do not switch to `mapbox://` style URLs without adding a token
+- **`data/hospital locations 11.csv` is untracked** — will be lost if the Codespace is reset without committing. Run `/checkpoint` soon.
+- **`data_ai/outpatient_coords.csv` is untracked** — same risk as above.
+- **Cache behavior:** `@st.cache_data` on `load_outpatient()` caches on server start. Any CSV edits require a server restart to take effect.
+- **Map tiles:** Both maps use CartoDB Positron (`https://basemaps.cartocdn.com/gl/positron-gl-style/style.json`). Do not switch to `mapbox://` URLs without a token.
+- **Tab order is hardcoded** in the `st.tabs()` call — adding/removing tabs requires updating both the tab list and the `with tab_X:` blocks in sync.
 - **Server restart command:** `streamlit run app.py --server.address 0.0.0.0 --server.port 8501 --server.headless true --server.enableCORS false --server.enableXsrfProtection false &`
