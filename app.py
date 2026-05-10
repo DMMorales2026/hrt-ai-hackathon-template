@@ -57,6 +57,10 @@ st.markdown("""
 
 # ── Load Data ──────────────────────────────────────────────────────────────────
 @st.cache_data
+def load_disciplines():
+    return pd.read_csv("data_ai/mental_health_disciplines.csv")
+
+@st.cache_data
 def load_data():
     df = pd.read_csv("data/hospital locations 22.csv")
     df.columns = df.columns.str.strip()
@@ -257,7 +261,7 @@ if total_h == 0:
     st.stop()
 
 # ── Tabs ───────────────────────────────────────────────────────────────────────
-tab_cards, tab_table, tab_map, tab_charts = st.tabs(["🗂 Hospital Cards", "📋 Full Table", "🗺️ Map", "📊 Charts"])
+tab_cards, tab_table, tab_map, tab_charts, tab_disc = st.tabs(["🗂 Hospital Cards", "📋 Full Table", "🗺️ Map", "📊 Charts", "👩‍⚕️ Disciplines"])
 
 # ── CARDS ──────────────────────────────────────────────────────────────────────
 with tab_cards:
@@ -410,6 +414,54 @@ with tab_charts:
                    .value_counts().reset_index())
     prog_series.columns = ["Program Type", "Count"]
     st.bar_chart(prog_series.set_index("Program Type"), height=320)
+
+# ── DISCIPLINES TAB ────────────────────────────────────────────────────────────
+with tab_disc:
+    disc_df = load_disciplines()
+
+    st.markdown("### 👩‍⚕️ Mental Health Disciplines in Inpatient Settings")
+    st.markdown("Professionals who work across California inpatient psychiatric hospitals and behavioral health facilities.")
+
+    col_search, col_setting = st.columns([2, 1])
+    with col_search:
+        disc_search = st.text_input("Search disciplines", placeholder="e.g. nurse, social worker, therapy…", key="disc_search")
+    with col_setting:
+        setting_filter = st.selectbox("Setting Type", ["All", "Acute", "Long-Term", "Acute & Long-Term"], key="disc_setting")
+
+    disc_filtered = disc_df.copy()
+    if disc_search:
+        kw = disc_search.lower()
+        disc_filtered = disc_filtered[
+            disc_filtered["Discipline"].str.lower().str.contains(kw, na=False)
+            | disc_filtered["Key Responsibilities"].str.lower().str.contains(kw, na=False)
+            | disc_filtered["Role in Inpatient Setting"].str.lower().str.contains(kw, na=False)
+            | disc_filtered["Credentials"].str.lower().str.contains(kw, na=False)
+        ]
+    if setting_filter != "All":
+        disc_filtered = disc_filtered[disc_filtered["Setting Type"] == setting_filter]
+
+    st.markdown(f"**{len(disc_filtered)} discipline{'s' if len(disc_filtered) != 1 else ''} shown**")
+    st.markdown("---")
+
+    for _, row in disc_filtered.iterrows():
+        with st.expander(f"**{row['Discipline']}** — {row['Credentials']}"):
+            e1, e2 = st.columns(2)
+            with e1:
+                st.markdown(f"**Credentials:** {row['Credentials']}")
+                st.markdown(f"**Education Required:** {row['Education Required']}")
+                st.markdown(f"**Setting Type:** {row['Setting Type']}")
+                st.markdown(f"**Licensure Body (CA):** {row['Licensure Body (CA)']}")
+            with e2:
+                st.markdown(f"**Role:** {row['Role in Inpatient Setting']}")
+                st.markdown(f"**Key Responsibilities:**")
+                for resp in row["Key Responsibilities"].split(","):
+                    st.markdown(f"- {resp.strip()}")
+
+    st.markdown("---")
+    st.markdown("#### Disciplines by Setting Type")
+    setting_ct = disc_df["Setting Type"].value_counts().reset_index()
+    setting_ct.columns = ["Setting Type", "Count"]
+    st.bar_chart(setting_ct.set_index("Setting Type"), height=250)
 
 st.markdown("---")
 st.caption("Data sourced from provided listings. Verify bed availability, admissions criteria, and insurance coverage directly with each facility.")
