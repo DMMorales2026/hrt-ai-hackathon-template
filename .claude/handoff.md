@@ -1,43 +1,39 @@
 # Handoff — 2026-05-10
 
 ## Summary
-- Built a Streamlit app (`app.py`) listing California inpatient mental health hospitals
-- Data source: `data/hospital locations 22.csv` (49 hospitals, no Organization Type column)
-- Created `data_ai/hospital_coords.csv` with lat/lon for all 49 hospitals (manually geocoded by city)
-- Added interactive pydeck map using CartoDB Positron tiles (no API key required)
-- Added sidebar filters: search, county, population served, insurance accepted, bed count slider
-- Added 5 summary metrics: hospitals found, total beds, counties, Joint Commission count, CDPH licensed count
-- Added 3 tabs: Hospital Cards, Full Table (with detail panel), Map, Charts
-- Styled cards: white background, slate gray left border, drop shadow
-- Set soft blue app background (#dbeafe) and slightly deeper blue sidebar (#bfdbfe)
-- Added holistic wellness SVG header (purple-to-orange sunrise, lotus flowers, stars, light rays, water ripples)
-- Fixed SVG rendering issue by encoding as base64 `<img>` tag to bypass Streamlit's HTML sanitizer
+- Added a **👩‍⚕️ Disciplines** tab listing 20 mental health disciplines that work in inpatient settings
+- Created `data_ai/mental_health_disciplines.csv` with columns: Discipline, Credentials, Education Required, Role in Inpatient Setting, Key Responsibilities, Setting Type, Licensure Body (CA)
+- Disciplines tab includes search filter, setting type filter (Acute / Long-Term / Both), expandable cards with full detail, and a bar chart by setting type
+- Updated **Recreational Therapist** setting type from "Long-Term" to "Acute & Long-Term"
+- Restarted server to clear `@st.cache_data` after CSV edit so change was reflected
+- Saved two checkpoints this session
 
 ## Current State
-- **Branch:** main (up to date with origin, changes not committed)
+- **Branch:** main (clean, all committed and tagged as `checkpoint`)
 - **Server:** running on port 8501
-- **Modified files:** `app.py`, `requirements.txt`
-- **Untracked files:** `data/hospital locations 22.csv`, `data_ai/behavioral_health_programs.csv`, `data_ai/hospital_coords.csv`
+- **Key files:**
+  - `app.py` — full app with 5 tabs: Hospital Cards, Full Table, Map, Disciplines, Charts
+  - `data/hospital locations 22.csv` — 49 inpatient hospitals (source data, read-only)
+  - `data_ai/mental_health_disciplines.csv` — 20 disciplines (editable)
+  - `data_ai/hospital_coords.csv` — lat/lon for all 49 hospitals
 - **App URL:** https://glowing-space-computing-machine-wv74r5qqvrvph9qwx-8501.app.github.dev
 
 ## Next Steps
-- Commit all changes to git
-- User may want to continue customizing the design (fonts, card layout, colors)
-- Could add a 2-3 column card grid layout instead of single-column
-- Could add a "Contact / Refer" button on each card
-- Could add export to CSV or PDF functionality
-- Could integrate outpatient data (`data/hospital locations.csv`) as a toggle
+- User may want to add more disciplines or edit existing entries
+- Could add a "discipline profile" detail page or modal
+- Could link disciplines to specific hospitals (e.g., which hospitals employ which disciplines)
+- Could add a glossary or credential explanation section
+- Could add outpatient programs as a separate tab using `data/hospital locations.csv`
 
 ## Key Decisions
-- Used `data/hospital locations 22.csv` (not `hospital locations 2.csv`) — new file dropped "Organization Type" column; replaced that metric with "CDPH Licensed" count
-- Used CartoDB Positron map style (`https://basemaps.cartocdn.com/gl/positron-gl-style/style.json`) instead of Mapbox — no API key needed
-- Hospital coordinates stored in `data_ai/hospital_coords.csv` and merged at load time — city-level precision
-- SVG header encoded as base64 `<img>` tag — inline SVGs with `<defs>` gradients were being sanitized by Streamlit and not rendering
-- Replaced "Private Hospitals" metric with "CDPH Licensed" since Organization Type column was removed
+- Disciplines data stored in `data_ai/mental_health_disciplines.csv` — easy to edit without touching `app.py`
+- Used `st.expander()` for each discipline card to keep the tab scannable without overwhelming the user
+- Setting Type values must be exactly: `"Acute"`, `"Long-Term"`, or `"Acute & Long-Term"` — the filter selectbox matches on these exact strings
+- After editing the CSV, a server restart (not just a browser refresh) is required to clear `@st.cache_data`
 
 ## Watchouts
-- **SVG in Streamlit:** Never use raw inline `<svg>` with `<defs>` gradients in `st.markdown()` — Streamlit sanitizes them. Always encode as base64 and embed as `<img src="data:image/svg+xml;base64,..."/>`
-- **Mapbox tiles:** `mapbox://styles/...` URLs require a token and will show a blank map. Always use CartoDB or another open tile provider
-- **`use_container_width` deprecation:** Streamlit now prefers `width='stretch'` — already updated in the table views
-- **Streamlit server:** The server stops when the Codespace idles. Restart with: `streamlit run app.py --server.address 0.0.0.0 --server.port 8501 --server.headless true --server.enableCORS false --server.enableXsrfProtection false &`
-- **data/ folder:** Never write to or modify files in `data/` — it is read-only per project rules
+- **Cache behavior:** `@st.cache_data` caches CSV reads at server startup. Editing a CSV while the server is running will NOT reflect until the server is restarted — a browser hard-refresh alone is not enough
+- **Setting Type filter:** The selectbox options are hardcoded as `["All", "Acute", "Long-Term", "Acute & Long-Term"]` — if a new setting type value is added to the CSV that doesn't match one of these exactly, it won't appear in the filter
+- **SVG header:** Encoded as base64 `<img>` tag — do not switch back to inline `<svg>` with `<defs>`, Streamlit sanitizes gradient definitions
+- **Map tiles:** Uses CartoDB Positron (free, no API key). Do not switch to `mapbox://` style URLs without adding a token
+- **Server restart command:** `streamlit run app.py --server.address 0.0.0.0 --server.port 8501 --server.headless true --server.enableCORS false --server.enableXsrfProtection false &`

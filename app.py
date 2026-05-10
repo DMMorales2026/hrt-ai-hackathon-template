@@ -167,7 +167,7 @@ st.markdown(f"""
               align-items:center; text-align:center; padding:16px;">
     <h1 style="color:white; font-size:2rem; font-weight:800; margin:0;
                text-shadow: 0 2px 10px rgba(0,0,0,0.7);">
-      🏥 California Inpatient Mental Health Hospitals
+      California Inpatient Mental Health Hospitals
     </h1>
     <p style="color:#fde68a; font-size:1rem; margin:8px 0 0 0;
               text-shadow: 0 1px 6px rgba(0,0,0,0.6);">
