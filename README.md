@@ -1,49 +1,33 @@
-# 🎉 HRT AI Hackathon Template
+# California's Mental Health Program Directory
 
-A GitHub Codespace template for the Hospitality, Recreation, and Tourism (HRT) Applied Research Hackathon. Build a working Streamlit prototype with Claude — no coding experience required.
-
-## Getting Started
-
-1. Click **Code** → **Create Codespace on main**
-2. Wait for the environment to set up (1~5 min). The terminal will tell you when everything is ready.
-3. Click the **Claude** (orange star) icon at the top right corner
-4. Sign in with your **Claude Team** account
-5. Tell Claude what you want to build! For example:
-   > "Build a dashboard that shows hotel occupancy by city."
-
-## Claude Commands
-
-Type these in the Claude Code chat at any time:
-
-| Command | What it does |
-|---------|-------------|
-| `/run` | Start your app and give you a clickable link to view it |
-| `/checkpoint` | Save your current progress |
-| `/back-to-checkpoint` | Restore to your last saved checkpoint |
-| `/restart` | Reset everything back to the very beginning |
-| `/write-readme` | Generate a README based on your current app |
-| `/push` | Publish your project to your own GitHub for your portfolio |
-| `/handoff` | Write a session summary to pick up later |
-| `/resume` | Load the previous session summary |
-
-## What's Inside
-
-| File / Folder | Purpose |
-|---------------|---------|
-| `app.py` | Your Streamlit app — Claude writes all code here |
-| `CLAUDE.md` | Instructions that guide Claude's behavior |
-| `requirements.txt` | Python dependencies (Streamlit, Pandas) |
-| `data/` | Place your own datasets here (CSV, etc.) |
-| `data_ai/` | Claude saves any generated or crawled data here |
-
-## Uploading Your Own Data
-
-1. In the left sidebar, right-click the `data/` folder
-2. Select **Upload...**
-3. Choose your file
-
-CSV files will automatically open as a table when you click them.
+A starting point for any potential patient or young professional looking for inpatient and out patient mental health programs across California
 
 ---
 
-**Have fun building!** 🚀
+## Features
+
+- Inpatient Hospital Cards
+- Inpatient Full List
+- Inpatient Map across California
+- Inpatient Charts
+- Outpatient Program List
+- Outpatient Map across California
+- Disciplines working in Inpatient Mental Health
+
+---
+
+## Usage for **patients**
+
+1. To help find inpatient hospital locations near them
+2. To assist patients with phone numbers and links to each hospital
+3. To assist patient and family members nagivate insurances accepted at each hospital
+4. To understand each potiental discipline working in the patient treatment team
+
+---
+
+## Usage for **young profressional**
+
+1. To locate a list of potiental job opportunities in the inpatient and outpatient sectors
+2. To assist young professionals with basic understanding of each discipline working in inpatient settings
+3. To provide a basic overview of the size and scope each program has to offer.
+
